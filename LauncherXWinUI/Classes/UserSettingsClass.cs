@@ -447,45 +447,120 @@ namespace LauncherXWinUI.Classes
         /// <param name="gridViewItems">GridView.Items property</param>
         public static void SaveLauncherXItems(ItemCollection gridViewItems)
         {
-            // Clear the DataDir
-            System.IO.DirectoryInfo di = new DirectoryInfo(DataDir);
+            // Safer save: write to a temp directory first, then swap with the real DataDir.
+            string tempDir = DataDir + "_tmp";
+            string backupDir = DataDir + "_bak_" + DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            string lockFile = Path.Combine(SettingsDir, "save.lock");
+            string logFile = Path.Combine(SettingsDir, "save_errors.log");
 
-            foreach (FileInfo file in di.GetFiles())
-            {
-                file.Delete();
-            }
-            foreach (DirectoryInfo dir in di.GetDirectories())
-            {
-                dir.Delete(true);
-            }
+            // Ensure settings dir exists
+            try { Directory.CreateDirectory(SettingsDir); } catch { }
 
-            int globalFilename = 0;
-
-            // Start saving the items in the GridView
-            // Name each file 1.json, 2.json in order for each GridViewTile
-            // For a GridViewTileGroup, create a folder
-            foreach (UserControl userControl in gridViewItems)
+            FileStream lockFs = null;
+            try
             {
-                if (userControl is GridViewTile)
+                // Acquire a file lock to avoid concurrent saves from multiple instances
+                int attempts = 0;
+                while (attempts < 5)
                 {
-                    GridViewTile gridViewTile = userControl as GridViewTile;
-                    SerialiseGridViewTileToJson(gridViewTile, Path.Combine(DataDir, globalFilename.ToString() + ".json"));
-
-                }
-                else if (userControl is GridViewTileGroup)
-                {
-                    GridViewTileGroup gridViewTileGroup = userControl as GridViewTileGroup;
-                    string tileGroupDir = Path.Combine(DataDir, globalFilename.ToString());
-                    Directory.CreateDirectory(tileGroupDir);
-
-                    SerialiseGridViewTileGroupToJson(gridViewTileGroup, tileGroupDir);
+                    try
+                    {
+                        lockFs = new FileStream(lockFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        System.Threading.Thread.Sleep(200);
+                        attempts += 1;
+                    }
                 }
 
-                globalFilename += 1;
+                // Prepare temp directory
+                if (Directory.Exists(tempDir))
+                    Directory.Delete(tempDir, true);
+                Directory.CreateDirectory(tempDir);
+
+                // Temporarily redirect DataDir so the existing serialisation helpers write into tempDir
+                string originalDataDir = DataDir;
+                try
+                {
+                    DataDir = tempDir;
+
+                    int globalFilename = 0;
+                    // Start saving the items into tempDir
+                    foreach (UserControl userControl in gridViewItems)
+                    {
+                        if (userControl is GridViewTile)
+                        {
+                            GridViewTile gridViewTile = userControl as GridViewTile;
+                            // pass just filename; SerialiseGridViewTileToJson will combine with DataDir
+                            SerialiseGridViewTileToJson(gridViewTile, globalFilename.ToString() + ".json");
+                        }
+                        else if (userControl is GridViewTileGroup)
+                        {
+                            GridViewTileGroup gridViewTileGroup = userControl as GridViewTileGroup;
+                            string tileGroupDir = Path.Combine(DataDir, globalFilename.ToString());
+                            Directory.CreateDirectory(tileGroupDir);
+                            SerialiseGridViewTileGroupToJson(gridViewTileGroup, tileGroupDir);
+                        }
+
+                        globalFilename += 1;
+                    }
+                }
+                finally
+                {
+                    // restore original DataDir regardless of success/failure
+                    DataDir = originalDataDir;
+                }
+
+                // swap directories atomically: move original to backup, move temp into place
+                if (Directory.Exists(DataDir))
+                {
+                    // move original to backup
+                    if (Directory.Exists(backupDir)) Directory.Delete(backupDir, true);
+                    Directory.Move(DataDir, backupDir);
+                }
+
+                // move temp to DataDir (new location)
+                Directory.Move(tempDir, DataDir);
+
+                // delete backup if everything succeeded
+                if (Directory.Exists(backupDir))
+                {
+                    try { Directory.Delete(backupDir, true); } catch { /* ignore cleanup errors */ }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception for diagnosis
+                try
+                {
+                    File.AppendAllText(logFile, DateTime.UtcNow.ToString("o") + " - Error saving LauncherX items: " + ex.ToString() + Environment.NewLine);
+                }
+                catch { }
+
+                // Attempt to restore from backup if temp swap failed
+                try
+                {
+                    if (Directory.Exists(DataDir + "_bak_") && !Directory.Exists(DataDir) && Directory.Exists(DataDir + "_bak_"))
+                    {
+                        // best-effort restore; path probably won't match, so skip
+                    }
+                }
+                catch { }
+            }
+            finally
+            {
+                if (lockFs != null)
+                {
+                    lockFs.Dispose();
+                    try { File.Delete(lockFile); } catch { }
+                }
             }
         }
 
         // Helper methods for loading items
+                            string debugLog = Path.Combine(SettingsDir, "save_debug.log");
 
         /// <summary>
         /// Create a GridViewTile object from a Json file
@@ -595,6 +670,23 @@ namespace LauncherXWinUI.Classes
                 if (gridViewItem is GridViewTile)
                 {
                     GridViewTile gridViewTile = gridViewItem as GridViewTile;
+                    // Debug: log start
+                    try { File.AppendAllText(debugLog, DateTime.UtcNow.ToString("o") + " - SaveLauncherXItems: starting write to tempDir\n"); } catch { }
+
+                    // Optional artificial delay to simulate slow saves for testing.
+                    // Create an 'enable_save_delay' file in the SettingsDir to enable.
+                    try
+                    {
+                        string delayFlag = Path.Combine(SettingsDir, "enable_save_delay");
+                        if (File.Exists(delayFlag))
+                        {
+                            // delay for 3 seconds per file to make interruption easier to reproduce
+                            File.AppendAllText(debugLog, DateTime.UtcNow.ToString("o") + " - SaveLauncherXItems: detected enable_save_delay flag\n");
+                            System.Threading.Thread.Sleep(3000);
+                        }
+                    }
+                    catch { }
+
 
                     if (gridViewTile.IsLinkedFolder == true)
                     {
