@@ -10,3 +10,15 @@ C:\Users\fligh\source\repos\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-wi
 C:\Users\fligh\source\repos\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\refint\WinFormsClassLibrary.dll
 C:\Users\fligh\source\repos\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\WinFormsClassLibrary.pdb
 C:\Users\fligh\source\repos\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\ref\WinFormsClassLibrary.dll
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\bin\Release\net8.0-windows10.0.22621.0\WinFormsClassLibrary.deps.json
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\bin\Release\net8.0-windows10.0.22621.0\WinFormsClassLibrary.dll
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\bin\Release\net8.0-windows10.0.22621.0\WinFormsClassLibrary.pdb
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\WinFormsClassLibrary.GeneratedMSBuildEditorConfig.editorconfig
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\WinFormsClassLibrary.AssemblyInfoInputs.cache
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\WinFormsClassLibrary.AssemblyInfo.cs
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\WinFormsClassLibrary.csproj.CoreCompileInputs.cache
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\WinFormsClassLibrary.sourcelink.json
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\WinFormsClassLibrary.dll
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\refint\WinFormsClassLibrary.dll
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\WinFormsClassLibrary.pdb
+J:\Coding\LauncherX\LauncherX\WinFormsClassLibrary\obj\Release\net8.0-windows10.0.22621.0\ref\WinFormsClassLibrary.dll

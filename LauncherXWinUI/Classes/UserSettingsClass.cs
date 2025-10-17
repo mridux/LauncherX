@@ -447,6 +447,20 @@ namespace LauncherXWinUI.Classes
         /// <param name="gridViewItems">GridView.Items property</param>
         public static void SaveLauncherXItems(ItemCollection gridViewItems)
         {
+            // Debug/testing helpers
+            // If set to >0, this will delay the save before swapping temp into place to help reproduce interrupted saves.
+            // Set this to 0 for normal operation.
+            int artificialSaveDelayMs = 0; // <--- set to e.g., 2000 to simulate slow save during testing
+
+            string debugLog = Path.Combine(SettingsDir, "save_debug.log");
+
+            void DebugLog(string msg)
+            {
+                try { File.AppendAllText(debugLog, DateTime.UtcNow.ToString("o") + " " + msg + Environment.NewLine); } catch { }
+            }
+
+            DebugLog($"SaveLauncherXItems called - itemsCount={gridViewItems?.Count ?? 0}");
+
             // Safer save: write to a temp directory first, then swap with the real DataDir.
             string tempDir = DataDir + "_tmp";
             string backupDir = DataDir + "_bak_" + DateTime.UtcNow.ToString("yyyyMMddHHmmss");
@@ -560,7 +574,6 @@ namespace LauncherXWinUI.Classes
         }
 
         // Helper methods for loading items
-                            string debugLog = Path.Combine(SettingsDir, "save_debug.log");
 
         /// <summary>
         /// Create a GridViewTile object from a Json file
@@ -670,23 +683,6 @@ namespace LauncherXWinUI.Classes
                 if (gridViewItem is GridViewTile)
                 {
                     GridViewTile gridViewTile = gridViewItem as GridViewTile;
-                    // Debug: log start
-                    try { File.AppendAllText(debugLog, DateTime.UtcNow.ToString("o") + " - SaveLauncherXItems: starting write to tempDir\n"); } catch { }
-
-                    // Optional artificial delay to simulate slow saves for testing.
-                    // Create an 'enable_save_delay' file in the SettingsDir to enable.
-                    try
-                    {
-                        string delayFlag = Path.Combine(SettingsDir, "enable_save_delay");
-                        if (File.Exists(delayFlag))
-                        {
-                            // delay for 3 seconds per file to make interruption easier to reproduce
-                            File.AppendAllText(debugLog, DateTime.UtcNow.ToString("o") + " - SaveLauncherXItems: detected enable_save_delay flag\n");
-                            System.Threading.Thread.Sleep(3000);
-                        }
-                    }
-                    catch { }
-
 
                     if (gridViewTile.IsLinkedFolder == true)
                     {
